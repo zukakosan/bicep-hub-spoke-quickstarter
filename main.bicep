@@ -49,3 +49,5 @@ module createSpokeVnets './modules/spokeVnet.bicep' = [for i in range(1, spokeCo
 }]
 
 
+// ここでDNATルールを作成する
+// Spokeの何らかのVMに対して、DNATルールを作成する
