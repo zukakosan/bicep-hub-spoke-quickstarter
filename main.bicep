@@ -1,7 +1,7 @@
 param location string = resourceGroup().location
 
 @minValue(1)
-@maxValue(20)
+@maxValue(10)
 param spokeCount int = 3
 
 @allowed([
@@ -24,25 +24,28 @@ param adminPassword string
 var azfwDeploy = azfwEnabled == 'Enabled'
 // var azfwNatgwDeploy = azfwNatgwEnabled == 'Enabled'
 
-module createVnets './modules/vnet.bicep' = {
-  name: 'createVnets'
+module createHubVnet './modules/hubVnet.bicep' = {
+  name: 'createHubVnets'
   params:{
     location: location
-    spokeCount: spokeCount
     azfwEnabled: azfwEnabled
-    adminUsername: adminUsername
-    adminPassword: adminPassword
+    azfwName: azfwName
   }
 }
 
-module createAzfw './modules/azfw.bicep' = if(azfwDeploy){
-  name: 'createAzfw'
-  params:{
+
+module createSpokeVnets './modules/spokeVnet.bicep' = [for i in range(1, spokeCount): {
+  name: 'spokeVnet-${i}'
+  params: {
     location: location
+    index: i
+    adminUsername: adminUsername
+    adminPassword: adminPassword
     azfwName: azfwName
   }
   dependsOn:[
-    createVnets
+    createHubVnet
   ]
-}
+}]
+
 

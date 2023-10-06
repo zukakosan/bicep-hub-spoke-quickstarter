@@ -4,10 +4,56 @@ param index int
 param adminUsername string
 @secure()
 param adminPassword string
+param azfwName string
 
 resource hubVnet 'Microsoft.Network/virtualNetworks@2023-04-01' existing = {
   name: 'vnet-hub'
 }
+resource azureFirewall 'Microsoft.Network/azureFirewalls@2023-04-01' existing = {
+  name: azfwName
+}
+
+resource nsgDefault 'Microsoft.Network/networkSecurityGroups@2023-04-01' = {
+  name: 'nsg-spoke-${index}'
+  location: location
+  properties: {
+    // securityRules: [
+    //   {
+    //     name: 'nsgRule'
+    //     properties: {
+    //       description: 'description'
+    //       protocol: 'Tcp'
+    //       sourcePortRange: '*'
+    //       destinationPortRange: '*'
+    //       sourceAddressPrefix: '*'
+    //       destinationAddressPrefix: '*'
+    //       access: 'Allow'
+    //       priority: 100
+    //       direction: 'Inbound'
+    //     }
+    //   }
+    // ]
+  }
+}
+
+resource routeTable 'Microsoft.Network/routeTables@2019-11-01' = {
+  name: 'rt-spoke-${index}'
+  location: location
+  properties: {
+    routes: [
+      {
+        name: 'defaultRoute'
+        properties: {
+          addressPrefix: '0.0.0.0/0'
+          nextHopType: 'VirtualAppliance'
+          nextHopIpAddress: azureFirewall.properties.ipConfigurations[0].properties.privateIPAddress
+        }
+      }
+    ]
+    disableBgpRoutePropagation: true
+  }
+}
+
 
 resource spokeVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   name: 'vnet-spoke-${index}'
@@ -23,12 +69,18 @@ resource spokeVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
         name: 'subnet-001'
         properties: {
           addressPrefix: '10.${index}0.0.0/24'
+          networkSecurityGroup: {
+            id: nsgDefault.id
+          }
         }
       }
       {
         name: 'subnet-002'
         properties: {
           addressPrefix: '10.${index}0.1.0/24'
+          networkSecurityGroup: {
+            id: nsgDefault.id
+          }
         }
       }
     ]

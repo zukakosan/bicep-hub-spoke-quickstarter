@@ -1,9 +1,6 @@
 param location string
-param spokeCount int
 param azfwEnabled string
-param adminUsername string
-@secure()
-param adminPassword string
+param azfwName string
 
 var azfwDeploy = azfwEnabled == 'Enabled'
 
@@ -41,12 +38,23 @@ resource createAzfwSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-04-01'
   }
 }
 
-module createSpokeVNets './spokeVnet.bicep' = [for i in range(1, spokeCount): {
-  name: 'spokeVnet-${i}'
-  params: {
+module createAzfw './azfw.bicep' = if(azfwDeploy){
+  name: 'createAzfw'
+  params:{
     location: location
-    index: i
-    adminUsername: adminUsername
-    adminPassword: adminPassword
+    azfwName: azfwName
   }
-}]
+  dependsOn:[
+    createAzfwSubnet
+  ]
+}
+// module createSpokeVnets './spokeVnet.bicep' = [for i in range(1, spokeCount): {
+//   name: 'spokeVnet-${i}'
+//   params: {
+//     location: location
+//     index: i
+//     adminUsername: adminUsername
+//     adminPassword: adminPassword
+//     azfwName: azfwName
+//   }
+// }]

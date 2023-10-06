@@ -36,7 +36,7 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2023-04-01' = {
 }
 
 
-resource firewall 'Microsoft.Network/azureFirewalls@2023-04-01' = {
+resource azureFirewall 'Microsoft.Network/azureFirewalls@2023-04-01' = {
   name: azfwName
   location: location
   properties: {

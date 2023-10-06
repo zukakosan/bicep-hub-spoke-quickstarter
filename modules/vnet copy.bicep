@@ -1,5 +1,4 @@
 param location string
-param spokeCount int
 param azfwEnabled string
 
 var azfwDeploy = azfwEnabled == 'Enabled'
