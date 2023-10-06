@@ -1,15 +1,15 @@
 param location string
 param azfwName string
 
-@minValue(1)
-@maxValue(100)
-param numberOfPublicIPAddresses int = 2
+// @minValue(1)
+// @maxValue(100)
+// param numberOfPublicIPAddresses int = 2
 
-resource azfwSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
-  name: 'hub-vnet/AzureFirewallSubnet'
+resource azfwSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-04-01' existing = {
+  name: 'vnet-hub/AzureFirewallSubnet'
 }
 
-resource azfwPip 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
+resource azfwPip 'Microsoft.Network/publicIPAddresses@2023-04-01' = {
   name: 'azfw-pip'
   location: location
   sku: {
@@ -21,8 +21,8 @@ resource azfwPip 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
   }
 }
 
-resource firewallPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
-  name: '${azfwName}-policy}'
+resource firewallPolicy 'Microsoft.Network/firewallPolicies@2023-04-01' = {
+  name: '${azfwName}-policy'
   location: location
   properties: {
     sku: {
@@ -36,7 +36,7 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
 }
 
 
-resource firewall 'Microsoft.Network/azureFirewalls@2021-05-01' = {
+resource firewall 'Microsoft.Network/azureFirewalls@2023-04-01' = {
   name: azfwName
   location: location
   properties: {
@@ -45,7 +45,7 @@ resource firewall 'Microsoft.Network/azureFirewalls@2021-05-01' = {
       tier: 'Standard'
     }    
     firewallPolicy: {
-      id: 'firewallPolicy.id'
+      id: firewallPolicy.id
     }
     ipConfigurations: [ 
       {

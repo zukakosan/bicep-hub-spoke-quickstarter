@@ -4,7 +4,7 @@ param azfwEnabled string
 
 var azfwDeploy = azfwEnabled == 'Enabled'
 
-resource hubVnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+resource hubVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   name: 'vnet-hub'
   location: location
   properties: {
@@ -30,7 +30,7 @@ resource hubVnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   }
 }
 
-resource createAzfwSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = if(azfwDeploy) {
+resource createAzfwSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-04-01' = if(azfwDeploy) {
   name: 'AzureFirewallSubnet'
   parent: hubVnet
   properties: {
@@ -38,7 +38,7 @@ resource createAzfwSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01'
   }
 }
 
-resource spokeVNetLoop 'Microsoft.Network/virtualNetworks@2023-05-01' = [for i in range(1, spokeCount+1): {
+resource spokeVNetLoop 'Microsoft.Network/virtualNetworks@2023-04-01' = [for i in range(1, spokeCount): {
   name: 'vnet-spoke-${i}'
   location: location
   properties: {
@@ -61,5 +61,37 @@ resource spokeVNetLoop 'Microsoft.Network/virtualNetworks@2023-05-01' = [for i i
         }
       }
     ]
+  }
+}]
+
+// use "i-1" for index of array starting with "0"
+// loop index starts with "1" 
+resource peeringHubToSpokeLoop 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-07-01' = [for i in range(1, spokeCount): {
+  name: 'hub-to-spoke-${i}'
+  parent: hubVnet
+  properties: {
+    allowVirtualNetworkAccess: true
+    allowForwardedTraffic: true
+    allowGatewayTransit: false
+    useRemoteGateways: false
+    remoteVirtualNetwork: {
+      id: spokeVNetLoop[i-1].id
+    }
+  }
+}]
+
+// use "i-1" for index of array starting with "0"
+// loop index starts with "1" 
+resource peeringSpokeToHubLoop 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-07-01' = [for i in range(1, spokeCount):  {
+  name: 'spoke-${i}-to-hub'
+  parent: spokeVNetLoop[i-1]
+  properties: {
+    allowVirtualNetworkAccess: true
+    allowForwardedTraffic: true
+    allowGatewayTransit: false
+    useRemoteGateways: false
+    remoteVirtualNetwork: {
+      id: hubVnet.id
+    }
   }
 }]
