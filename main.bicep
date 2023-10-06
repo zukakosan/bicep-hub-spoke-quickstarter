@@ -11,14 +11,18 @@ param spokeCount int = 3
 param azfwEnabled string 
 param azfwName string = take('azfw-${uniqueString(resourceGroup().id)})}',9)
 
-@allowed([
-  'Enabled'
-  'Disabled'
-])
-param azfwNatgwEnabled string 
+param adminUsername string
+@secure()
+param adminPassword string
+
+// @allowed([
+//   'Enabled'
+//   'Disabled'
+// ])
+// param azfwNatgwEnabled string 
 
 var azfwDeploy = azfwEnabled == 'Enabled'
-var azfwNatgwDeploy = azfwNatgwEnabled == 'Enabled'
+// var azfwNatgwDeploy = azfwNatgwEnabled == 'Enabled'
 
 module createVnets './modules/vnet.bicep' = {
   name: 'createVnets'
@@ -26,6 +30,8 @@ module createVnets './modules/vnet.bicep' = {
     location: location
     spokeCount: spokeCount
     azfwEnabled: azfwEnabled
+    adminUsername: adminUsername
+    adminPassword: adminPassword
   }
 }
 
@@ -39,3 +45,4 @@ module createAzfw './modules/azfw.bicep' = if(azfwDeploy){
     createVnets
   ]
 }
+
