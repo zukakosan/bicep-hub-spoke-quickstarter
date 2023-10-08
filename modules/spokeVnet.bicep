@@ -1,9 +1,9 @@
 param location string
-// param spokeCount int
 param index int
 param adminUsername string
 @secure()
 param adminPassword string
+// param azfwDeploy bool
 param azfwName string
 
 resource hubVnet 'Microsoft.Network/virtualNetworks@2023-04-01' existing = {
@@ -74,15 +74,6 @@ resource spokeVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
           }
         }
       }
-      {
-        name: 'subnet-002'
-        properties: {
-          addressPrefix: '10.${index}0.1.0/24'
-          networkSecurityGroup: {
-            id: nsgDefault.id
-          }
-        }
-      }
     ]
   }
   resource spokeSubnet 'subnets' existing = {
@@ -90,8 +81,7 @@ resource spokeVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   }
 }
 
-// use "i-1" for index of array starting with "0"
-// loop index starts with "1" 
+// Peering from Hub to Spoke
 resource peeringHubToSpoke 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-07-01' = {
   name: 'hub-to-spoke-${index}'
   parent: hubVnet
@@ -106,8 +96,7 @@ resource peeringHubToSpoke 'Microsoft.Network/virtualNetworks/virtualNetworkPeer
   }
 }
 
-// use "i-1" for index of array starting with "0"
-// loop index starts with "1" 
+// Peering from Spoke to Hub
 resource peeringSpokeToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-07-01' = {
   name: 'spoke-${index}-to-hub'
   parent: spokeVnet

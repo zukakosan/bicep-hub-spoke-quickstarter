@@ -124,3 +124,5 @@ resource azureFirewall 'Microsoft.Network/azureFirewalls@2023-04-01' = {
     ]
   }
 }
+
+output azfwPrivateIp string = azureFirewall.properties.ipConfigurations[0].properties.privateIPAddress
