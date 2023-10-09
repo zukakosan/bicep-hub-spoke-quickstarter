@@ -3,7 +3,6 @@ param location string = resourceGroup().location
 @minValue(1)
 @maxValue(10)
 param spokeCount int = 2 
-param azfwName string = take('azfw-${uniqueString(resourceGroup().id)})}',9)
 
 param adminUsername string
 @secure()
@@ -15,6 +14,7 @@ param adminPassword string
 ])
 param bastionEnabled string 
 
+var azfwName = take('azfw-${uniqueString(resourceGroup().id)})}',9)
 var deployAzureBastion = bastionEnabled == 'Enabled'
 
 // create hub vnet 
