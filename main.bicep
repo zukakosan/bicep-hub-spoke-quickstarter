@@ -2,39 +2,35 @@ param location string = resourceGroup().location
 
 @minValue(1)
 @maxValue(10)
-param spokeCount int = 2
-
-// @allowed([
-//   'Enabled'
-//   'Disabled'
-// ])
-// param azfwEnabled string 
+param spokeCount int = 2 
 param azfwName string = take('azfw-${uniqueString(resourceGroup().id)})}',9)
 
 param adminUsername string
 @secure()
 param adminPassword string
 
-// @allowed([
-//   'Enabled'
-//   'Disabled'
-// ])
-// param azfwNatgwEnabled string 
+@allowed([
+  'Enabled'
+  'Disabled'
+])
+param bastionEnabled string 
 
-// var azfwDeploy = azfwEnabled == 'Enabled'
-// var azfwNatgwDeploy = azfwNatgwEnabled == 'Enabled'
+var deployAzureBastion = bastionEnabled == 'Enabled'
 
+// create hub vnet 
+// deploy azure bastion if needed
 module createHubVnet './modules/hubVnet.bicep' = {
-  name: 'createHubVnets'
+  name: 'createHubVnet'
   params:{
     location: location
-    // azfwDeploy: azfwDeploy
     azfwName: azfwName
     adminUsername: adminUsername
     adminPassword: adminPassword
+    deployAzureBastion: deployAzureBastion
   }
 }
 
+// create spoke vnets for N-times defined by parameters
 module createSpokeVnets './modules/spokeVnet.bicep' = [for i in range(1, spokeCount): {
   name: 'spokeVnet-${i}'
   params: {
@@ -42,7 +38,6 @@ module createSpokeVnets './modules/spokeVnet.bicep' = [for i in range(1, spokeCo
     index: i
     adminUsername: adminUsername
     adminPassword: adminPassword
-    // azfwDeploy: azfwDeploy
     azfwName: azfwName
   }
   dependsOn:[

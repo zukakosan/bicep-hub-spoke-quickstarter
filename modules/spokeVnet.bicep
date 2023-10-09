@@ -3,7 +3,6 @@ param index int
 param adminUsername string
 @secure()
 param adminPassword string
-// param azfwDeploy bool
 param azfwName string
 
 resource hubVnet 'Microsoft.Network/virtualNetworks@2023-04-01' existing = {
@@ -13,6 +12,7 @@ resource azureFirewall 'Microsoft.Network/azureFirewalls@2023-04-01' existing = 
   name: azfwName
 }
 
+// create network security group for spoke vnet
 resource nsgDefault 'Microsoft.Network/networkSecurityGroups@2023-04-01' = {
   name: 'nsg-spoke-${index}'
   location: location
@@ -36,7 +36,8 @@ resource nsgDefault 'Microsoft.Network/networkSecurityGroups@2023-04-01' = {
   }
 }
 
-resource routeTable 'Microsoft.Network/routeTables@2019-11-01' = {
+// create route table with route of 0.0.0.0/0 to azure firewall
+resource routeTable 'Microsoft.Network/routeTables@2023-04-01' = {
   name: 'rt-spoke-${index}'
   location: location
   properties: {
@@ -50,11 +51,11 @@ resource routeTable 'Microsoft.Network/routeTables@2019-11-01' = {
         }
       }
     ]
-    disableBgpRoutePropagation: true
+    disableBgpRoutePropagation: false
   }
 }
 
-
+// create spoke vnet with subnet that nsg and route table is attached
 resource spokeVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   name: 'vnet-spoke-${index}'
   location: location
@@ -72,6 +73,9 @@ resource spokeVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
           networkSecurityGroup: {
             id: nsgDefault.id
           }
+          routeTable: {
+            id: routeTable.id
+          }
         }
       }
     ]
@@ -81,8 +85,8 @@ resource spokeVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   }
 }
 
-// Peering from Hub to Spoke
-resource peeringHubToSpoke 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-07-01' = {
+// peering from hub to spoke
+resource peeringHubToSpoke 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-04-01' = {
   name: 'hub-to-spoke-${index}'
   parent: hubVnet
   properties: {
@@ -96,8 +100,8 @@ resource peeringHubToSpoke 'Microsoft.Network/virtualNetworks/virtualNetworkPeer
   }
 }
 
-// Peering from Spoke to Hub
-resource peeringSpokeToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-07-01' = {
+// peering from spoke to hub
+resource peeringSpokeToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-04-01' = {
   name: 'spoke-${index}-to-hub'
   parent: spokeVnet
   properties: {
@@ -111,7 +115,8 @@ resource peeringSpokeToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeer
   }
 }
 
-resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
+// create network interface for ubuntu vm
+resource networkInterface 'Microsoft.Network/networkInterfaces@2023-04-01' = {
   name: 'ubuntu-spoke-${index}-nic'
   location: location
   properties: {
@@ -129,7 +134,8 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
   }
 }
 
-resource ubuntuVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
+// create ubuntu vm
+resource ubuntuVM 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   name: 'ubuntu-spoke-${index}'
   location: location
   properties: {
