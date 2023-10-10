@@ -5,6 +5,8 @@ param adminUsername string
 param adminPassword string
 param azfwName string
 
+var subnetName = 'subnet-001'
+var testVmSize = 'Standard_B2ms'
 resource hubVnet 'Microsoft.Network/virtualNetworks@2023-04-01' existing = {
   name: 'vnet-hub'
 }
@@ -67,7 +69,7 @@ resource spokeVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
     }
     subnets: [
       {
-        name: 'subnet-001'
+        name: subnetName
         properties: {
           addressPrefix: '10.${index}0.0.0/24'
           networkSecurityGroup: {
@@ -81,7 +83,7 @@ resource spokeVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
     ]
   }
   resource spokeSubnet 'subnets' existing = {
-    name: 'subnet-001'
+    name: subnetName
   }
 }
 
@@ -140,7 +142,7 @@ resource ubuntuVM 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_B2ms'
+      vmSize: testVmSize
     }
     osProfile: {
       computerName: 'ubuntu-spoke-${index}'

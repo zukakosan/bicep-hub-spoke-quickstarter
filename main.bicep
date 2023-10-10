@@ -1,24 +1,31 @@
+@description('Azure location to deploy resources')
 param location string = resourceGroup().location
 
+@description('Number of spoke vnets to create')
 @minValue(1)
 @maxValue(10)
 param spokeCount int = 2 
 
+@description('Admin username for all VMs')
 param adminUsername string
+@description('Admin password for all VMs')
 @secure()
 param adminPassword string
 
+@description('Azure Bastion should be enabled or disabled')
 @allowed([
   'Enabled'
   'Disabled'
 ])
 param bastionEnabled string 
 
-var azfwName = take('azfw-${uniqueString(resourceGroup().id)})}',9)
+@description('Azure Firewall name deployed in hub vnet')
+var azfwName = 'azfw-hub'
+
+@description('boolean variable if azure bastion should be deployed')
 var deployAzureBastion = bastionEnabled == 'Enabled'
 
-// create hub vnet 
-// deploy azure bastion if needed
+// create hub vnet that contains azure firewall, jumpbox, azure bastion(if needed)
 module createHubVnet './modules/hubVnet.bicep' = {
   name: 'createHubVnet'
   params:{
@@ -38,9 +45,9 @@ module createSpokeVnets './modules/spokeVnet.bicep' = [for i in range(1, spokeCo
     index: i
     adminUsername: adminUsername
     adminPassword: adminPassword
-    azfwName: azfwName
+    azfwName: azfwName // put azure firewall name to create user defined routes of [0.0.0.0/0 to azure firewall]
   }
   dependsOn:[
-    createHubVnet
+    createHubVnet // create spoke vnet after hub vnet because of vnet peering, user defined route
   ]
 }]

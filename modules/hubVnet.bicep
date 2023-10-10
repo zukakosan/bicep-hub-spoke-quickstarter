@@ -5,7 +5,7 @@ param adminUsername string
 param adminPassword string
 param deployAzureBastion bool
 var serverName = 'jumpbox'
-
+var hubVmSize = 'Standard_B2ms'
 // create network security group for hub vnet
 resource nsgDefault 'Microsoft.Network/networkSecurityGroups@2023-04-01' = {
   name: 'nsg-hub'
@@ -88,7 +88,7 @@ resource jumpBox 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_B2ms'
+      vmSize: hubVmSize
     }
     osProfile: {
       computerName: 'ubuntu-${serverName}'
