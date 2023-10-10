@@ -39,7 +39,7 @@ module createHubVnet './modules/hubVnet.bicep' = {
 
 // create spoke vnets for N-times defined by parameters
 module createSpokeVnets './modules/spokeVnet.bicep' = [for i in range(1, spokeCount): {
-  name: 'spokeVnet-${i}'
+  name: 'createSpokeVnet-${i}'
   params: {
     location: location
     index: i

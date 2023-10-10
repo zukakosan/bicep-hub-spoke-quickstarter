@@ -9,7 +9,7 @@ param adminPassword string
 param azfwName string
 
 var subnetName = 'subnet-001'
-var testVmSize = 'Standard_B2ms'
+var spokeTestVmSize = 'Standard_B2ms'
 
 resource hubVnet 'Microsoft.Network/virtualNetworks@2023-04-01' existing = {
   name: 'vnet-hub'
@@ -121,63 +121,77 @@ resource peeringSpokeToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeer
   }
 }
 
-// create network interface for ubuntu vm
-resource networkInterface 'Microsoft.Network/networkInterfaces@2023-04-01' = {
-  name: 'ubuntu-spoke-${index}-nic'
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          subnet: {
-            id: spokeVnet::spokeSubnet.id
-          }
-        }
-      }
-    ]
+module createVM './vm.bicep' = {
+  name: 'createSpokeVM-${index}'
+  params:{
+    location: location
+    nicName: 'vm-spoke-${index}-nic'
+    subnetId: spokeVnet::spokeSubnet.id
+    vmName: 'vm-spoke-${index}'
+    adminUsername: adminUsername
+    adminPassword: adminPassword
+    diskName: 'vm-spoke-${index}-disk'
+    vmSize: spokeTestVmSize
   }
 }
 
-// create ubuntu vm in spoke vnet
-resource ubuntuVM 'Microsoft.Compute/virtualMachines@2023-03-01' = {
-  name: 'ubuntu-spoke-${index}'
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: testVmSize
-    }
-    osProfile: {
-      computerName: 'ubuntu-spoke-${index}'
-      adminUsername: adminUsername
-      adminPassword: adminPassword
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-focal'
-        sku: '20_04-lts-gen2'
-        version: 'latest'
-      }
-      osDisk: {
-        name: 'ubuntu-spoke-${index}-disk'
-        caching: 'ReadWrite'
-        createOption: 'FromImage'
-      }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: networkInterface.id
-        }
-      ]
-    }
-    diagnosticsProfile: {
-      bootDiagnostics: {
-        enabled: false
-      }
-    }
-  }
-}
+// // create network interface for ubuntu vm
+// resource networkInterface 'Microsoft.Network/networkInterfaces@2023-04-01' = {
+//   name: 'ubuntu-spoke-${index}-nic'
+//   location: location
+//   properties: {
+//     ipConfigurations: [
+//       {
+//         name: 'ipconfig1'
+//         properties: {
+//           privateIPAllocationMethod: 'Dynamic'
+//           subnet: {
+//             id: spokeVnet::spokeSubnet.id
+//           }
+//         }
+//       }
+//     ]
+//   }
+// }
+
+// // create ubuntu vm in spoke vnet
+// resource ubuntuVM 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+//   name: 'ubuntu-spoke-${index}'
+//   location: location
+//   properties: {
+//     hardwareProfile: {
+//       vmSize: testVmSize
+//     }
+//     osProfile: {
+//       computerName: 'ubuntu-spoke-${index}'
+//       adminUsername: adminUsername
+//       adminPassword: adminPassword
+//     }
+//     storageProfile: {
+//       imageReference: {
+//         publisher: 'Canonical'
+//         offer: '0001-com-ubuntu-server-focal'
+//         sku: '20_04-lts-gen2'
+//         version: 'latest'
+//       }
+//       osDisk: {
+//         name: 'ubuntu-spoke-${index}-disk'
+//         caching: 'ReadWrite'
+//         createOption: 'FromImage'
+//       }
+//     }
+//     networkProfile: {
+//       networkInterfaces: [
+//         {
+//           id: networkInterface.id
+//         }
+//       ]
+//     }
+//     diagnosticsProfile: {
+//       bootDiagnostics: {
+//         enabled: false
+//       }
+//     }
+//   }
+// }
 
