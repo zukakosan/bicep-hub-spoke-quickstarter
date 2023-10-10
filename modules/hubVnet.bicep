@@ -169,7 +169,7 @@ resource subnetRouteTableAssociation 'Microsoft.Network/virtualNetworks/subnets@
   }
 }
 
-// create azure bastion if deployAzureBastion is true
+// create azure bastion after hub vnet creattion if deployAzureBastion is true
 module createAzureBastion './bastion.bicep' = if(deployAzureBastion) {
   name: 'createAzureBastion'
   params: {
