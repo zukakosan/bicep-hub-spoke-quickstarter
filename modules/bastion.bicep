@@ -1,4 +1,6 @@
-param location string = resourceGroup().location
+param location string
+
+@description('Address prefix for AzureBastionSubnet')
 var bastionAddressPrefix = '10.0.2.0/24'
 
 resource hubVnet 'Microsoft.Network/virtualNetworks@2023-04-01' existing = {
