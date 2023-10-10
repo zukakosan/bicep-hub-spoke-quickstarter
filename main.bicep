@@ -22,7 +22,7 @@ param bastionEnabled string
 @description('Azure Firewall name deployed in hub vnet')
 var azfwName = 'azfw-hub'
 
-@description('boolean variable if azure bastion should be deployed')
+@description('Boolean variable if Azure Bastion should be deployed')
 var deployAzureBastion = bastionEnabled == 'Enabled'
 
 // create hub vnet that contains azure firewall, jumpbox, azure bastion(if needed)

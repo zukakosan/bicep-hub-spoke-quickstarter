@@ -1,5 +1,8 @@
 param location string
+
+@description('Loop index for resource creation received from main.bicep')
 param index int
+
 param adminUsername string
 @secure()
 param adminPassword string
@@ -7,6 +10,7 @@ param azfwName string
 
 var subnetName = 'subnet-001'
 var testVmSize = 'Standard_B2ms'
+
 resource hubVnet 'Microsoft.Network/virtualNetworks@2023-04-01' existing = {
   name: 'vnet-hub'
 }
@@ -38,7 +42,7 @@ resource nsgDefault 'Microsoft.Network/networkSecurityGroups@2023-04-01' = {
   }
 }
 
-// create route table with route of 0.0.0.0/0 to azure firewall
+// create route table with route of [0.0.0.0/0 to azure firewall]
 resource routeTable 'Microsoft.Network/routeTables@2023-04-01' = {
   name: 'rt-spoke-${index}'
   location: location
@@ -136,7 +140,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2023-04-01' = {
   }
 }
 
-// create ubuntu vm
+// create ubuntu vm in spoke vnet
 resource ubuntuVM 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   name: 'ubuntu-spoke-${index}'
   location: location
