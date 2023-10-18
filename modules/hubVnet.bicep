@@ -6,6 +6,7 @@ param adminPassword string
 param deployAzureBastion bool
 
 var serverName = 'jumpbox'
+var subnetName = 'subnet-001'
 var jumpboxVmSize = 'Standard_B2ms'
 
 // create network security group for hub vnet
@@ -44,7 +45,7 @@ resource hubVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
     }
     subnets: [
       {
-        name: 'subnet-001'
+        name: subnetName
         properties: {
           addressPrefix: '10.0.0.0/24'
           networkSecurityGroup: {
@@ -65,63 +66,18 @@ resource hubVnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   }
 }
 
-// create network interface for jumpbox vm
-resource networkInterface 'Microsoft.Network/networkInterfaces@2023-04-01' = {
-  name: 'ubuntu-${serverName}-nic'
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          subnet: {
-            id: hubVnet::hubSubnet.id
-          }
-        }
-      }
-    ]
-  }
-}
 
-// create jumpbox vm
-resource jumpBox 'Microsoft.Compute/virtualMachines@2023-03-01' = {
-  name: 'ubuntu-${serverName}'
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: jumpboxVmSize
-    }
-    osProfile: {
-      computerName: 'ubuntu-${serverName}'
-      adminUsername: adminUsername
-      adminPassword: adminPassword
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-focal'
-        sku: '20_04-lts-gen2'
-        version: 'latest'
-      }
-      osDisk: {
-        name: 'ubuntu-${serverName}-disk'
-        caching: 'ReadWrite'
-        createOption: 'FromImage'
-      }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: networkInterface.id
-        }
-      ]
-    }
-    diagnosticsProfile: {
-      bootDiagnostics: {
-        enabled: false
-      }
-    }
+module createVM './vm.bicep' = {
+  name: 'createHubVM'
+  params:{
+    location: location
+    nicName: 'vm-${serverName}-nic'
+    subnetId: hubVnet::hubSubnet.id
+    vmName: 'vm-${serverName}'
+    adminUsername: adminUsername
+    adminPassword: adminPassword
+    diskName: 'vm-${serverName}-disk'
+    vmSize: jumpboxVmSize
   }
 }
 
@@ -131,7 +87,7 @@ module createAzfw './azfw.bicep' = {
   params:{
     location: location
     azfwName: azfwName
-    dnatAddress: networkInterface.properties.ipConfigurations[0].properties.privateIPAddress
+    dnatAddress: createVM.outputs.vmPrivateIp // to create dnat rule for jumpbox vm
   }
 }
 

@@ -1,5 +1,6 @@
 param location string
 param azfwName string
+// param deployDnatVm string
 
 @description('The IP address to which the firewall will translate the destination address of the incoming packet. This should be the private IP address of the VM to which you want to allow SSH access.')
 param dnatAddress string
