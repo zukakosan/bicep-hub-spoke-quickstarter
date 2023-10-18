@@ -88,9 +88,6 @@ module createAzfw './azfw.bicep' = {
     location: location
     azfwName: azfwName
     dnatAddress: createVM.outputs.vmPrivateIp // to create dnat rule for jumpbox vm
-    // deployDnatVm: deployDnatVm
-    // dnatAddress: deployDnatVm ? createVM.outputs.vmPrivateIp : ''
-    // dnatAddress: networkInterface.properties.ipConfigurations[0].properties.privateIPAddress
   }
 }
 
